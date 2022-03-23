@@ -21,50 +21,6 @@ log = logging.getLogger(__name__)
 ############
 # Part 1
 ############
-class Literal(int):
-    """
-    Literal.
-
-    Q: Do I even need to abstract it this much?
-    Couldn't I just represent it as an integer
-    and call it a day... Check if the two integers
-    add up to 0 and voila. No need for fancy abstractions.
-    Maybe I could make it inherit int?
-
-    """
-    # def __init__(self, symbol, is_positive):
-    #     self.symbol = symbol
-    #     self.is_positive = is_positive
-    
-    # def __repr__(self) -> str:
-    #     output = ""
-    #     if self.is_positive:
-    #         output.append("-")
-    #     return output.append(str(self.symbol))
-    pass
-
-class Clause(set):
-    """
-    Set of Literals forming disjoint sentence.
-    
-    Note: doctests could fail because I'm using sets,
-    so not ordered
-
-    """
-
-    pass
-
-class CNFSentence:
-    """
-    Set of Clauses forming CNF sentence.
-    """
-    pass
-
-class KnowledgeBase:
-    """
-    
-    """
-    pass
 
 def PL_Resolution(KB, Alpha):
     """
@@ -151,12 +107,12 @@ def PL_Resolution(KB, Alpha):
             clauses.append(clause_s)
 
     while True:
-        log.debug("clauses: {}".format(clauses))
+        #log.debug("clauses: {}".format(clauses))
         new = []    # initialize set of new clauses
         # For each pair of clauses, resolve Ci and Cj
         for Ci, Cj in itertools.combinations(clauses, 2):
             resolvents = _PL_Resolve(list(set(Ci)), list(set(Cj)))    # get list of resolved clauses
-            log.debug("Ci: {}, Cj: {} resolvents: {}".format(Ci, Cj, resolvents))
+            #log.debug("Ci: {}, Cj: {} resolvents: {}".format(Ci, Cj, resolvents))
             if [] in resolvents:
                 # if the empty clause exists
                 return 1
@@ -164,7 +120,7 @@ def PL_Resolution(KB, Alpha):
                 # Add unique resolvents to the set of new clauses
                 if resolvent not in new:
                     new.append(resolvent)
-        log.debug("new: {}".format(new))
+        #log.debug("new: {}".format(new))
         is_subset = True
         for n in new:
             # Check that new is subset of set clauses
@@ -174,7 +130,7 @@ def PL_Resolution(KB, Alpha):
                 clauses.append(n)
         
         if is_subset:
-            log.debug("new is subset of clauses")
+            #log.debug("new is subset of clauses")
             return -1
             
 
