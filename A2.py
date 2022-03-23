@@ -14,6 +14,9 @@ import logging
 import sys
 from pprint import pprint
 import itertools
+import pdb
+
+log = logging.getLogger(__name__)
 
 ############
 # Part 1
@@ -127,6 +130,9 @@ def PL_Resolution(KB, Alpha):
     >>> PL_Resolution([[[2, -3], [-2, -3]], [[-1]], [[1, -2, 3], [1, -2, -3], [1, -2], [-1, -2, -3]], [[-1, -3]]], [[-3]])
     1
     """
+    if KB == [[[-2], [1]], [[1, 2]], [[-1, -2]], [[1, -2]]]:
+        #pdb.set_trace()
+        pass
     # Test 1 is failing
     clauses = []
     # Add the set of clauses in KB
@@ -145,10 +151,12 @@ def PL_Resolution(KB, Alpha):
             clauses.append(clause_s)
 
     while True:
+        log.debug("clauses: {}".format(clauses))
         new = []    # initialize set of new clauses
         # For each pair of clauses, resolve Ci and Cj
         for Ci, Cj in itertools.combinations(clauses, 2):
             resolvents = _PL_Resolve(list(set(Ci)), list(set(Cj)))    # get list of resolved clauses
+            log.debug("Ci: {}, Cj: {} resolvents: {}".format(Ci, Cj, resolvents))
             if [] in resolvents:
                 # if the empty clause exists
                 return 1
@@ -156,16 +164,17 @@ def PL_Resolution(KB, Alpha):
                 # Add unique resolvents to the set of new clauses
                 if resolvent not in new:
                     new.append(resolvent)
-
+        log.debug("new: {}".format(new))
         is_subset = True
         for n in new:
             # Check that new is subset of set clauses
-            if n not in new:
+            if n not in clauses:
                 # Add to set of clauses if unique
                 is_subset = False
                 clauses.append(n)
         
         if is_subset:
+            log.debug("new is subset of clauses")
             return -1
             
 
@@ -287,5 +296,5 @@ if __name__ == "__main__":
     Library dependencies:
     """
     print(header)
-    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format='%(message)s')
+    logging.basicConfig(level=logging.ERROR, stream=sys.stdout, format='%(message)s')
     doctest.testmod()
