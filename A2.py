@@ -113,7 +113,21 @@ def PL_Resolution(KB, Alpha):
 
     Possible improvements:
         - Decrease clause search from O(n) to O(log n) by maintaining a BST/heap
+
+    PL_Resolution([[[-2], [1]], [[1, 2]], [[-1, -2]], [[1, -2]]], [[1, 2], [-1, -2]])
+    1
+    >>> PL_Resolution([[[-2], [1]], [[1, 2]], [[-1, -2]], [[1, -2]]], [[1, 2], [-1, -2]])
+    1
+    >>> PL_Resolution([[[-1, -2]], [[1, -2], [1, -3]]], [[-1, -2, -3], [1, 3]])
+    -1
+    >>> PL_Resolution([[[-1, -2], [1, -2], [1]], [[-2]]], [[-1, 2]])
+    -1
+    >>> PL_Resolution([[[1, -2, 4]], [[-2, -3, 4]]], [[2, 4], [-1, -2, 3, -4], [1, -2, 3, -4]])
+    -1
+    >>> PL_Resolution([[[2, -3], [-2, -3]], [[-1]], [[1, -2, 3], [1, -2, -3], [1, -2], [-1, -2, -3]], [[-1, -3]]], [[-3]])
+    1
     """
+    # Test 1 is failing
     clauses = []
     # Add the set of clauses in KB
     for CNF_sentence in KB:
@@ -133,12 +147,12 @@ def PL_Resolution(KB, Alpha):
     while True:
         new = []    # initialize set of new clauses
         # For each pair of clauses, resolve Ci and Cj
-        for Ci, Cj in itertools.combiations(clauses, 2):
-            resolvents = _PL_Resolve(Ci, Cj)    # get list of resolved clauses
+        for Ci, Cj in itertools.combinations(clauses, 2):
+            resolvents = _PL_Resolve(list(set(Ci)), list(set(Cj)))    # get list of resolved clauses
             if [] in resolvents:
                 # if the empty clause exists
-                return True
-            for resolvent in resolvent:
+                return 1
+            for resolvent in resolvents:
                 # Add unique resolvents to the set of new clauses
                 if resolvent not in new:
                     new.append(resolvent)
@@ -152,7 +166,7 @@ def PL_Resolution(KB, Alpha):
                 clauses.append(n)
         
         if is_subset:
-            return False
+            return -1
             
 
 # Maybe I should use objects....
@@ -161,12 +175,41 @@ def _get_clause_set():
     """
     Input list 
     """
+    pass
 
 def _PL_Resolve(Ci, Cj):
     """
-    
+    Resolves two clauses with complementary literals.
+    NOTE: don't simplify resolved clauses with complementary
+    literals in them, however simplify duplicated clauses
+        -> why? I don't know.... I could check if it gives
+        the same results
+
+    >>> _PL_Resolve([-2], [1])
+    []
+    >>> _PL_Resolve([-1,-2,-3], [-1,2])
+    [[-1,-3]]
+    >>> _PL_Resolve([-1,-3,-4,-5], [-1,-3,-4,5])
+    [[-1,-3,-4]]
+    >>> _PL_Resolve([-1,-3,-4,-5], [-1,-3,4,5])
+    [[-1,-3,-4,4], [-1,-3,-5,5]]
     """
-    pass
+    # Test 2 is failing for some reason....
+    resolved_clauses = []
+    for lit in Ci:
+        if (lit * -1) in Cj:
+            # If complementary exists, create resolved clause
+            temp_i = Ci.copy()
+            temp_i.remove(lit)
+            temp_j = Cj.copy()
+            temp_j.remove(lit * -1)
+            clause = []
+            clause.extend(temp_i)
+            clause.extend(temp_j)
+            clause = list(set(clause))
+            if clause not in resolved_clauses:
+                resolved_clauses.append(clause)
+    return resolved_clauses
 
 def _Negate_CNF_Sentence(CNF_sentence):
     """
@@ -186,7 +229,6 @@ def _Negate_CNF_Sentence(CNF_sentence):
 
     >>> _Negate_CNF_Sentence([[1,2],[-1,-2]])
     [[1,-2],[-1,2]]
-
     >>> _Negate_CNF_Sentence([[1, 2], [-1], [-1, 2]])
     [[1,-2]]
     """
