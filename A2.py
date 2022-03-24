@@ -88,10 +88,6 @@ def PL_Resolution(KB, Alpha):
     >>> PL_Resolution([[[-1, -3, -4, -5], [-1, -3, -4, 5]], [[-1, -2, 3, 4, 5], [-1, -2, -3]], [[-1, 2, 3, -4, -5], [-2, -4, -5], [1, -2, -3]]], [[1, 3, -4, 5]])
     -1
     """
-    if KB == [[[-2], [1]], [[1, 2]], [[-1, -2]], [[1, -2]]]:
-        #pdb.set_trace()
-        pass
-    # Test 1 is failing
     clauses = []
     # Add the set of clauses in KB
     for CNF_sentence in KB:
@@ -103,18 +99,15 @@ def PL_Resolution(KB, Alpha):
     # Add the set of negated clauses in Alpha
     neg_Alpha = _Negate_CNF_Sentence(Alpha)     # shouldn't I be deep copying... that's expensive tho, not rlly worth
     for clause in neg_Alpha:
-        # TBD - The toughest challenge O_O
         clause_s = list(set(clause))
         if clause_s not in clauses:
             clauses.append(clause_s)
 
     while True:
-        #log.debug("clauses: {}".format(clauses))
         new = []    # initialize set of new clauses
         # For each pair of clauses, resolve Ci and Cj
         for Ci, Cj in itertools.combinations(clauses, 2):
-            resolvents = _PL_Resolve(list(set(Ci)), list(set(Cj)))    # get list of resolved clauses
-            #log.debug("Ci: {}, Cj: {} resolvents: {}".format(Ci, Cj, resolvents))
+            resolvents = _PL_Resolve(list(Ci), list(Cj))    # get list of resolved clauses
             if [] in resolvents:
                 # if the empty clause exists
                 return 1
@@ -122,7 +115,6 @@ def PL_Resolution(KB, Alpha):
                 # Add unique resolvents to the set of new clauses
                 if resolvent not in new:
                     new.append(resolvent)
-        #log.debug("new: {}".format(new))
         is_subset = True
         for n in new:
             # Check that new is subset of set clauses
@@ -132,25 +124,12 @@ def PL_Resolution(KB, Alpha):
                 clauses.append(n)
         
         if is_subset:
-            #log.debug("new is subset of clauses")
             return -1
             
-
-# Maybe I should use objects....
-# Why do I have to program DeMorgan's.... it's only used once though
-def _get_clause_set():
-    """
-    Input list 
-    """
-    pass
 
 def _PL_Resolve(Ci, Cj):
     """
     Resolves two clauses with complementary literals.
-    NOTE: don't simplify resolved clauses with complementary
-    literals in them, however simplify duplicated clauses
-        -> why? I don't know.... I could check if it gives
-        the same results
 
     >>> _PL_Resolve([-2], [1])
     []
@@ -199,14 +178,12 @@ def _Negate_CNF_Sentence(CNF_sentence):
     >>> _Negate_CNF_Sentence([[1, 2], [-1], [-1, 2]])
     [[1,-2]]
     """
-    # Test 2 is failing...
-    # Now it's not clearing the tautology cases????
+
     negated_sentence = []
     for raw_clause in itertools.product(*CNF_sentence):
         # Get product of all the clauses
         raw_clause = list(set(raw_clause))  # remove duplicate literals and "sort"
         raw_clause = [literal * -1 for literal in raw_clause]   # negate all literals
-        # ~~Remove pairs of literals that add to 0~~
         # Set clause to [] if P or not P detected
         is_tautology = False
         for i in range(len(raw_clause)):
@@ -217,7 +194,6 @@ def _Negate_CNF_Sentence(CNF_sentence):
                     is_tautology = True
                     break
             if is_tautology: break
-        #if is_tautology: break
         
         clause = list(set(raw_clause))
         if clause != [] and clause not in negated_sentence:
@@ -297,16 +273,11 @@ def PL_FC_Entails(KB, Alpha):
                 if literal > 0 and len(clause) == 1 and literal not in agenda:
                     # Lone literal detected
                     agenda.append(literal)
-            #if len(clause) > 1:
             # map number of premises
             count[tuple(clause)] = len(clause) - 1    # checking for all clauses
             clauses.append(clause)
     
     while agenda != []:
-        
-        #log.debug("--\nagenda: {}".format(agenda))
-        #log.debug("count: {}".format(count))
-        #log.debug("inferred: {}".format(inferred))
         p = agenda.pop()
         if p == q: return 1
         if inferred[p] == False:
@@ -317,14 +288,8 @@ def PL_FC_Entails(KB, Alpha):
                     count[tuple(clause)] -= 1
                 if count[tuple(clause)] == 0:
                     agenda.append(clause[-1])
-
-    #log.debug("--\nagenda: {}".format(agenda))
-    #log.debug("count: {}".format(count))
-    #log.debug("inferred: {}".format(inferred))
     return -1
-
-def _get_key(clause):
-    pass
+    
 
 if __name__ == "__main__":
     header = """
