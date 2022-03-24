@@ -232,7 +232,96 @@ def _Negate_CNF_Sentence(CNF_sentence):
 def PL_FC_Entails(KB, Alpha):
     """
     
+    Pseudocode:
+
+    function PL-FC-ENTAILS(KB, q) returns true or false
+        inputs: KB, the knowledge base, a set of propositional definite clauses
+                q, the query, a proposition symbol
+
+        count <-- a table, where count[c] is the number of symbols in c's premise
+        inferred <-- a table, where inferred[s] is initially false for all symbols
+        agenda <-- a queue of symbols, initially symbols known to be true in KB
+
+        while agenda is not empty do
+            p <-- POP(agenda)
+            if p == q then return true
+            if inferred[p] == false then
+                inferred[p] <-- true
+                for each clause c in KB where p is in c.PREMISE do
+                    decrement count[c]
+                    if count[c] == 0 then add c.CONCLUSION to agenda
+        return false
+    
+    Approach:
+        Init:
+            - define MAP inferred
+            - define MAP count
+            - define LIST agenda
+        1. Iterate over each clause in KB and everytime a premise (negative literal)
+            is present, add to the literal's count in MAP count
+            i. Define MAP inferred for literal l as False when it is first detected
+            ii. When literal l is detected ~~and it is positive and clause is length 1,
+                set l to be True in inferred and~~ (DONT INBETWEEN ~) add to LIST agenda
+            iii. MAP length of clause - 1 in count if len clause > 1
+        2. Pop a literal p from agenda. If p equals the query q, return True
+        3. If inferred[p] is False, set to True
+        4. For every clause c in KB, if p is a premise (negative literal) in c, decrement
+            count[c]
+        5. If count[c] == 0, add conclusion (positive literal) in clause c to agenda
+        6. Goto 2 and repeat while agenda is not empty
+
+    >>> PL_FC_Entails([[[-1, 3], [1, -2]], [[2]], [[3]], [[-1, 2]], [[1, -3]], [[-1, -2, 3]], [[-2, 3]]], [[1]])
+    1
+    >>> PL_FC_Entails([[[3]], [[2]], [[1, -2]], [[-1, 3]], [[1, -3]]], [[1]])
+    1
+    >>> PL_FC_Entails([[[-1, 3], [2]], [[-2, 4]], [[2, -3, -5]], [[1, -4]], [[-1, -3, 4], [1, -2, -3], [1]], [[2, -4, -5]], [[3, -5]]], [[5]])
+    -1
     """
+    # Assumes that there are not duplicate clauses....
+    inferred = {}
+    count = {}
+    agenda = []
+    clauses = []
+
+    q = Alpha[0][0]
+
+    for CNF_sentence in KB:
+        for clause in CNF_sentence:
+            clause.sort()   # make it easier to access conclusion
+            for literal in clause:
+                if literal not in inferred and literal > 0:
+                    # Initialize inferred map
+                    inferred[literal] = False
+                if literal > 0 and len(clause) == 1 and literal not in agenda:
+                    # Lone literal detected
+                    agenda.append(literal)
+            #if len(clause) > 1:
+            # map number of premises
+            count[tuple(clause)] = len(clause) - 1    # checking for all clauses
+            clauses.append(clause)
+    
+    while agenda != []:
+        
+        #log.debug("--\nagenda: {}".format(agenda))
+        #log.debug("count: {}".format(count))
+        #log.debug("inferred: {}".format(inferred))
+        p = agenda.pop()
+        if p == q: return 1
+        if inferred[p] == False:
+            inferred[p] = True
+            for clause in clauses:
+                if (p * -1) in clause:
+                    # Complentary found in clause
+                    count[tuple(clause)] -= 1
+                if count[tuple(clause)] == 0:
+                    agenda.append(clause[-1])
+
+    #log.debug("--\nagenda: {}".format(agenda))
+    #log.debug("count: {}".format(count))
+    #log.debug("inferred: {}".format(inferred))
+    return -1
+
+def _get_key(clause):
     pass
 
 if __name__ == "__main__":
@@ -252,5 +341,5 @@ if __name__ == "__main__":
     Library dependencies:
     """
     print(header)
-    logging.basicConfig(level=logging.ERROR, stream=sys.stdout, format='%(message)s')
+    logging.basicConfig(level=logging.DEBUG, stream=sys.stdout, format='%(message)s')
     doctest.testmod()
